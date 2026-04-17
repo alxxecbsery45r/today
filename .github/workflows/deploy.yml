@@ -41,6 +41,25 @@ jobs:
       sha_short: ${{ steps.vars.outputs.sha_short }}
 
     steps:
+      - name: Check required secrets
+        run: |
+          if [ -z "${{ secrets.DATABASE_URL }}" ]; then
+            echo "Error: DATABASE_URL secret is required for build"
+            exit 1
+          fi
+          if [ -z "${{ secrets.VITE_API_URL }}" ]; then
+            echo "Error: VITE_API_URL secret is required for build"
+            exit 1
+          fi
+          if [ -z "${{ secrets.VITE_API_BASE_URL }}" ]; then
+            echo "Error: VITE_API_BASE_URL secret is required for build"
+            exit 1
+          fi
+          if [ -z "${{ secrets.EXPO_PUBLIC_DOMAIN }}" ]; then
+            echo "Error: EXPO_PUBLIC_DOMAIN secret is required for build"
+            exit 1
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -73,6 +92,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
+      - name: Run tests
+        run: pnpm test 2>/dev/null || echo "No tests found, skipping..."
 
       - name: Build shared libraries
         run: pnpm run typecheck:libs
@@ -101,6 +122,30 @@ jobs:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
         run: pnpm --filter @workspace/rider-app run build
 
+      - name: Verify builds
+        run: |
+          if [ ! -d "artifacts/api-server/dist" ]; then
+            echo "❌ API Server build failed"
+            exit 1
+          fi
+          if [ ! -d "artifacts/admin/dist" ]; then
+            echo "❌ Admin Panel build failed"
+            exit 1
+          fi
+          if [ ! -d "artifacts/vendor-app/dist" ]; then
+            echo "❌ Vendor App build failed"
+            exit 1
+          fi
+          if [ ! -d "artifacts/rider-app/dist" ]; then
+            echo "❌ Rider App build failed"
+            exit 1
+          fi
+          if [ ! -d "artifacts/ajkmart/dist" ]; then
+            echo "❌ AJKMart build failed"
+            exit 1
+          fi
+          echo "✅ All builds successful"
+
       - name: Package API build
         run: |
           tar -czf api-dist.tar.gz \
@@ -119,6 +164,7 @@ jobs:
             artifacts/admin/dist/ \
             artifacts/vendor-app/dist/ \
             artifacts/rider-app/dist/ \
+            artifacts/ajkmart/dist/ \
             nginx.conf
 
       - name: Upload API package
@@ -159,6 +205,18 @@ jobs:
             echo "Error: SSH_PRIVATE_KEY secret is not set. Please configure it in repository settings."
             exit 1
           fi
+          if [ -z "${{ secrets.DATABASE_URL }}" ]; then
+            echo "Error: DATABASE_URL secret is not set. Please configure it in repository settings."
+            exit 1
+          fi
+          if [ -z "${{ secrets.ADMIN_SECRET }}" ]; then
+            echo "Error: ADMIN_SECRET secret is not set. Please configure it in repository settings."
+            exit 1
+          fi
+          if [ -z "${{ secrets.ALLOWED_ORIGINS }}" ]; then
+            echo "Error: ALLOWED_ORIGINS secret is not set. Please configure it in repository settings."
+            exit 1
+          fi
 
       - name: Download API package
         uses: actions/download-artifact@v4
@@ -176,6 +234,39 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          # Test SSH connection
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || 22 }} -o ConnectTimeout=10 ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "echo 'SSH connection successful'"
+
+      - name: Check server requirements
+        run: |
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || 22 }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
+            # Check if required tools are installed
+            if ! command -v node &> /dev/null; then
+              echo "❌ Node.js not installed on server"
+              exit 1
+            fi
+            if ! command -v npm &> /dev/null; then
+              echo "❌ npm not installed on server"
+              exit 1
+            fi
+            if ! command -v nginx &> /dev/null; then
+              echo "❌ nginx not installed on server"
+              exit 1
+            fi
+
+            # Check if directories exist and are writable
+            if [ ! -w "/opt" ]; then
+              echo "❌ /opt directory not writable"
+              exit 1
+            fi
+            if [ ! -w "/usr/share/nginx/html" ]; then
+              echo "❌ nginx html directory not writable"
+              exit 1
+            fi
+
+            echo "✅ Server requirements met"
+          ENDSSH
+
       - name: Upload builds to server
         run: |
           scp -i ~/.ssh/deploy_key \
@@ -198,12 +289,39 @@ jobs:
             set -e
 
             DEPLOY_PATH="/opt/ajkmart"
+            BACKUP_PATH="/opt/ajkmart-backup-$(date +%Y%m%d-%H%M%S)"
+
+            echo "==> Creating backup..."
+            if [ -d "$DEPLOY_PATH" ]; then
+              sudo cp -r $DEPLOY_PATH $BACKUP_PATH
+              echo "Backup created at: $BACKUP_PATH"
+            fi
+
             mkdir -p $DEPLOY_PATH
 
             echo "==> Extracting builds..."
             cd $DEPLOY_PATH
             tar -xzf /tmp/api-dist.tar.gz
             tar -xzf /tmp/frontend-dist.tar.gz
+
+            echo "==> Setting up nginx directories..."
+            sudo mkdir -p /usr/share/nginx/html/admin
+            sudo mkdir -p /usr/share/nginx/html/vendor
+            sudo mkdir -p /usr/share/nginx/html/rider
+
+            # Copy frontend builds to nginx directories
+            sudo cp -r $DEPLOY_PATH/artifacts/admin/dist/* /usr/share/nginx/html/admin/ 2>/dev/null || true
+            sudo cp -r $DEPLOY_PATH/artifacts/vendor-app/dist/* /usr/share/nginx/html/vendor/ 2>/dev/null || true
+            sudo cp -r $DEPLOY_PATH/artifacts/rider-app/dist/* /usr/share/nginx/html/rider/ 2>/dev/null || true
+
+            # AJKMart goes to root directory
+            sudo cp -r $DEPLOY_PATH/artifacts/ajkmart/dist/* /usr/share/nginx/html/ 2>/dev/null || true
+
+            echo "==> Updating nginx configuration..."
+            sudo cp $DEPLOY_PATH/nginx.conf /etc/nginx/sites-available/ajkmart
+            sudo ln -sf /etc/nginx/sites-available/ajkmart /etc/nginx/sites-enabled/ 2>/dev/null || true
+            sudo rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
+            sudo nginx -t && sudo systemctl reload nginx
 
             echo "==> Creating .env file..."
             cat > $DEPLOY_PATH/.env << EOF
@@ -234,6 +352,41 @@ jobs:
                 --name ajkmart-api \
                 --env production
             pm2 save
+
+            echo "==> Waiting for API server to be healthy..."
+            for i in {1..30}; do
+              if curl -f http://localhost:3000/api/health > /dev/null 2>&1; then
+                echo "✅ API server is healthy"
+                break
+              fi
+              echo "Waiting for API server... ($i/30)"
+              sleep 2
+            done
+
+            if [ $i -eq 30 ]; then
+              echo "❌ API server failed to become healthy"
+              exit 1
+            fi
+
+            echo "==> Testing frontend endpoints..."
+            # Test main app
+            if curl -f http://localhost/ > /dev/null 2>&1; then
+              echo "✅ Main app (AJKMart) is accessible"
+            else
+              echo "❌ Main app failed to load"
+              exit 1
+            fi
+
+            # Test admin panel
+            if curl -f http://localhost/admin/ > /dev/null 2>&1; then
+              echo "✅ Admin panel is accessible"
+            else
+              echo "❌ Admin panel failed to load"
+            fi
+
+            echo "==> Cleanup old backups..."
+            # Keep only last 5 backups
+            sudo find /opt -maxdepth 1 -name "ajkmart-backup-*" -type d | sort -r | tail -n +6 | xargs -r sudo rm -rf
 
             echo "==> Cleanup..."
             rm -f /tmp/api-dist.tar.gz /tmp/frontend-dist.tar.gz

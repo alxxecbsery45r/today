@@ -2,8 +2,8 @@ name: Build & Deploy Docker
 
 on:
   push:
-    branches:
-      - master
+    branches: [main, master]
+  workflow_dispatch:
 
 jobs:
   build-and-push:
@@ -11,6 +11,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check required secrets
+        run: |
+          if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
+            echo "Error: DOCKERHUB_USERNAME secret is required"
+            exit 1
+          fi
+          if [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+            echo "Error: DOCKERHUB_TOKEN secret is required"
+            exit 1
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v4
 
