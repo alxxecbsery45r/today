@@ -49,6 +49,7 @@ export default defineConfig({
     port: finalPort,
     host: "0.0.0.0",
     allowedHosts: true,
+    cors: true, // Enable CORS for all origins in dev mode
     fs: {
       strict: true,
       deny: ["**/.*"],
@@ -57,14 +58,13 @@ export default defineConfig({
       "/api": {
         target: apiProxyTarget,
         changeOrigin: true,
-        onProxyRes: (proxyRes, req, res) => {
-          // Ensure all CORS headers are forwarded to the client
-          // This fixes browser blocking due to missing CORS headers
-          proxyRes.headers['Access-Control-Allow-Origin'] = '*';
-          proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD';
-          proxyRes.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With, Accept';
-          proxyRes.headers['Access-Control-Allow-Credentials'] = 'true';
-          proxyRes.headers['Access-Control-Expose-Headers'] = 'X-Total-Count, X-Page-Count';
+        onProxyRes: (proxyRes) => {
+          // Ensure CORS headers are present on all responses
+          proxyRes.headers['access-control-allow-origin'] = '*';
+          proxyRes.headers['access-control-allow-methods'] = 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD';
+          proxyRes.headers['access-control-allow-headers'] = proxyRes.headers['access-control-allow-headers'] || 'Content-Type, Authorization, X-Requested-With, Accept';
+          proxyRes.headers['access-control-allow-credentials'] = 'true';
+          proxyRes.headers['access-control-expose-headers'] = (proxyRes.headers['access-control-expose-headers'] ? proxyRes.headers['access-control-expose-headers'] + ', ' : '') + 'X-Total-Count, X-Page-Count';
         },
       },
     },
