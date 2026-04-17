@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
-    pkgs.unzip
+    pkgs.unzip,
+    pkgs.nodejs-22_x
   ];
 }
