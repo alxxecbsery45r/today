@@ -61,6 +61,15 @@ export default defineConfig({
       "/api": {
         target: apiProxyTarget,
         changeOrigin: true,
+        onProxyRes: (proxyRes, req, res) => {
+          // Ensure all CORS headers are forwarded to the client
+          // This fixes browser blocking due to missing CORS headers
+          proxyRes.headers['Access-Control-Allow-Origin'] = '*';
+          proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD';
+          proxyRes.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With, Accept';
+          proxyRes.headers['Access-Control-Allow-Credentials'] = 'true';
+          proxyRes.headers['Access-Control-Expose-Headers'] = 'X-Total-Count, X-Page-Count';
+        },
       },
     },
   },
