@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 /**
  * VAPID Web Push registration for the customer PWA.
  * No-op on native platforms — native push is handled via expo-notifications.

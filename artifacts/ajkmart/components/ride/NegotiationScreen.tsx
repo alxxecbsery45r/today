@@ -135,6 +135,7 @@ export function NegotiationScreen({
   minOffer: minOfferProp,
 }: NegotiationScreenProps) {
   const colorScheme = useColorScheme();
+  const { width } = useWindowDimensions();
   const C = colorScheme === "dark" ? Colors.dark : Colors.light;
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === "web" ? 67 : insets.top;

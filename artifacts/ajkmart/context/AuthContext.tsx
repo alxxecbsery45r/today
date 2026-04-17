@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
@@ -89,8 +90,9 @@ async function secureSet(key: string, value: string) {
 async function secureGet(key: string): Promise<string | null> {
   if (IS_WEB) {
     return AsyncStorage.getItem(WEB_KEY_PREFIX + key);
+  } else {
+    return SecureStore.getItemAsync(key);
   }
-  return SecureStore.getItemAsync(key);
 }
 async function secureDelete(key: string) {
   if (IS_WEB) {
