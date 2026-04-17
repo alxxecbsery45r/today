@@ -31,9 +31,7 @@ catalog:
 
 minimumReleaseAge: 1440
 
-minimumReleaseAgeExclude:
-  - '@replit/*'
-  - stripe-replit-sync
+minimumReleaseAgeExclude: '@replit/*,stripe-replit-sync,electron-to-chromium'
 
 onlyBuiltDependencies:
   - '@swc/core'
