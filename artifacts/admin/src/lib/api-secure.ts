@@ -62,25 +62,27 @@ export const uploadAdminImage = async (file: File): Promise<string> => {
   });
 };
 
-export const fetcher = async (endpoint: string, options: CustomFetchOptions & RequestInit = {}) => {
+export const fetcher = async <T = any>(endpoint: string, options: CustomFetchOptions & RequestInit = {}): Promise<T> => {
   const token = getToken();
   const method = (options.method || "GET").toString().toUpperCase();
   const shouldFetchCsrf = !!token && !["GET", "HEAD", "OPTIONS"].includes(method);
   let csrfToken = "";
 
-  if (shouldFetchCsrf && options.headers?.["x-csrf-token"] === undefined) {
+  if (shouldFetchCsrf && (options.headers as Record<string, any>)?.["x-csrf-token"] === undefined) {
     csrfToken = await csrfManager.getOrFetchToken().catch(() => "");
   }
 
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(token ? { "x-admin-token": token } : {}),
+    ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),
+    ...(options.headers as Record<string, string>),
+  };
+
   try {
-    return await customFetch(`${getApiBase()}${endpoint}`, {
+    return await customFetch<T>(`${getApiBase()}${endpoint}`, {
       ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { "x-admin-token": token } : {}),
-        ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),
-        ...options.headers,
-      },
+      headers: headers as HeadersInit,
       responseType: "json",
     });
   } catch (e) {
@@ -92,14 +94,16 @@ export const fetcher = async (endpoint: string, options: CustomFetchOptions & Re
  * Fetcher for unauthenticated endpoints (login, etc)
  * Does not require CSRF token since user is not yet authenticated
  */
-export const fetcherPublic = async (endpoint: string, options: CustomFetchOptions & RequestInit = {}) => {
+export const fetcherPublic = async <T = any>(endpoint: string, options: CustomFetchOptions & RequestInit = {}): Promise<T> => {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options.headers as Record<string, string>),
+  };
+
   try {
-    return await customFetch(`${getApiBase()}${endpoint}`, {
+    return await customFetch<T>(`${getApiBase()}${endpoint}`, {
       ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
+      headers: headers as HeadersInit,
       responseType: "json",
     });
   } catch (e) {

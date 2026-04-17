@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import {
   Database, Download, Upload, Trash2, HardDrive, RefreshCcw,
   FlaskConical, RotateCcw, Clock, AlertTriangle, Settings,
@@ -368,7 +368,7 @@ export function SystemSection() {
   const renderCustomForm = () => {
     if (!customFormOpen) return null;
 
-    let fields: JSX.Element[] = [];
+    let fields: ReactNode[] = [];
     if (customFormOpen === "user") {
       fields = [
         renderFormField("Name", "name", { placeholder: "Ahmed Khan" }),

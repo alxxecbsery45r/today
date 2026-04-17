@@ -5,16 +5,23 @@
 
 import DOMPurify from "dompurify";
 
+type DomPurifyConfig = {
+  ALLOWED_TAGS?: string[];
+  ALLOWED_ATTR?: string[];
+  KEEP_CONTENT?: boolean;
+  [key: string]: any;
+};
+
 // ============ String Sanitization ============
 
 /**
  * Sanitize user input to prevent XSS attacks
  */
-export function sanitizeInput(input: string, options?: DOMPurify.Config): string {
+export function sanitizeInput(input: string, options?: DomPurifyConfig): string {
   if (typeof input !== "string") return "";
   
   // Use DOMPurify to strip potentially dangerous HTML
-  const config: DOMPurify.Config = {
+  const config: DomPurifyConfig = {
     ALLOWED_TAGS: [], // No HTML tags allowed in input
     ALLOWED_ATTR: [],
     ...options,
@@ -31,7 +38,7 @@ export function sanitizeInput(input: string, options?: DOMPurify.Config): string
 export function sanitizeHtml(html: string): string {
   if (typeof html !== "string") return "";
 
-  const config: DOMPurify.Config = {
+  const config: DomPurifyConfig = {
     ALLOWED_TAGS: ["b", "i", "em", "strong", "p", "br", "ul", "ol", "li", "a"],
     ALLOWED_ATTR: ["href", "title"],
     KEEP_CONTENT: true,

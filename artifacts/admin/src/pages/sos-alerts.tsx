@@ -4,6 +4,7 @@ import { fetcher } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 import { io, type Socket } from "socket.io-client";
 
 type SosStatus = "pending" | "acknowledged" | "resolved";
@@ -285,6 +286,7 @@ export default function SosAlerts() {
   const [resolveTarget, setResolveTarget] = useState<SosAlert | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const [wsConnected, setWsConnected] = useState(false);
+  const { toast } = useToast();
 
   /* ── Status filter from tab ── */
   const statusForTab = (t: Tab): string | undefined => {

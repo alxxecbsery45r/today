@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { UseQueryResult, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { UseMutationOptions, UseQueryOptions, UseQueryResult, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getErrorMessage } from "@/types/safe-data";
 import type { ApiResponse } from "@/types";
 
@@ -29,8 +29,12 @@ export function useMounted(): boolean {
 /**
  * setState wrapper that only updates if component is mounted
  */
-export function useSafeState<T>(initialValue: T): [T, (value: T) => void] {
-  const [state, setState] = useState(initialValue);
+export function useSafeState<T>(initialValue: T | (() => T)): [T, (value: T) => void] {
+  const [state, setState] = useState<T>(
+    typeof initialValue === "function"
+      ? (initialValue as () => T)()
+      : initialValue
+  );
   const isMountedRef = useRef(true);
 
   useEffect(() => {
@@ -205,8 +209,7 @@ export function useLocalStorage<T>(
  * Get previous value of a variable
  */
 export function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T>();
-
+    const ref = useRef<T | undefined>(undefined);
   useEffect(() => {
     ref.current = value;
   }, [value]);
@@ -220,7 +223,7 @@ export function usePrevious<T>(value: T): T | undefined {
  * Wrapper around useQuery with built-in error handling
  */
 export function useSafeQuery<TData = unknown, TError = Error>(
-  options: Parameters<typeof useQuery>[0] & {
+  options: UseQueryOptions<TData, TError> & {
     onErrorMessage?: (error: TError) => string;
   }
 ): UseQueryResult<TData, TError> & {
@@ -267,7 +270,7 @@ export function useUpdateEffect(
  * Use a ref callback instead of ref object
  */
 export function useCallbackRef<T>(
-  callback: (el: T) => void
+  callback: (el: T | null) => void
 ): (el: T | null) => void {
   const callbackRef = useRef(callback);
 
@@ -286,7 +289,7 @@ export function useCallbackRef<T>(
  * Wrapper around useMutation with built-in error handling
  */
 export function useSafeMutation<TData = unknown, TError = Error, TVariables = void>(
-  options: Parameters<typeof useMutation>[0] & {
+  options: UseMutationOptions<TData, TError, TVariables> & {
     onErrorMessage?: (error: TError) => string;
   }
 ) {
@@ -363,6 +366,8 @@ export function useFetch<T = unknown>(
       const interval = setInterval(refetch, options.refetchInterval);
       return () => clearInterval(interval);
     }
+
+    return undefined;
   }, [url, options?.refetchInterval, refetch]);
 
   return { ...state, refetch };
