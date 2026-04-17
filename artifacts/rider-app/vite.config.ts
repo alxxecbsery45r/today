@@ -49,7 +49,6 @@ export default defineConfig({
     port: finalPort,
     host: "0.0.0.0",
     allowedHosts: true,
-    cors: true, // Enable CORS for all origins in dev mode
     fs: {
       strict: true,
       deny: ["**/.*"],
@@ -58,13 +57,22 @@ export default defineConfig({
       "/api": {
         target: apiProxyTarget,
         changeOrigin: true,
-        onProxyRes: (proxyRes) => {
-          // Ensure CORS headers are present on all responses
+        onProxyReq: (proxyReq, req, res) => {
+          // Ensure request includes necessary headers
+          proxyReq.setHeader('x-forwarded-proto', 'https');
+        },
+        onProxyRes: (proxyRes, req, res) => {
+          // Override CORS headers to allow all origins (dev mode)
           proxyRes.headers['access-control-allow-origin'] = '*';
           proxyRes.headers['access-control-allow-methods'] = 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD';
-          proxyRes.headers['access-control-allow-headers'] = proxyRes.headers['access-control-allow-headers'] || 'Content-Type, Authorization, X-Requested-With, Accept';
+          proxyRes.headers['access-control-allow-headers'] = 'Content-Type, Authorization, X-Requested-With, Accept';
           proxyRes.headers['access-control-allow-credentials'] = 'true';
-          proxyRes.headers['access-control-expose-headers'] = (proxyRes.headers['access-control-expose-headers'] ? proxyRes.headers['access-control-expose-headers'] + ', ' : '') + 'X-Total-Count, X-Page-Count';
+          proxyRes.headers['access-control-max-age'] = '86400';
+          // Ensure expose headers are present
+          const existingExpose = proxyRes.headers['access-control-expose-headers'];
+          proxyRes.headers['access-control-expose-headers'] = existingExpose 
+            ? existingExpose + ', X-Total-Count, X-Page-Count'
+            : 'X-Total-Count, X-Page-Count';
         },
       },
     },
