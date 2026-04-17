@@ -271,7 +271,7 @@ importers:
         version: 6.1.2(expo@54.0.33)(react-dom@19.2.5)(react-native@0.81.5)(react@19.2.5)
       buffer:
         specifier: '*'
-        version: 5.7.1
+        version: 6.0.3
       expo-auth-session:
         specifier: ~7.0.10
         version: 7.0.10(expo@54.0.33)(react-native@0.81.5)(react@19.2.5)
@@ -7223,6 +7223,13 @@ packages:
     dependencies:
       base64-js: 1.5.1
       ieee754: 1.2.1
+
+  /buffer@6.0.3:
+    resolution: {integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==}
+    dependencies:
+      base64-js: 1.5.1
+      ieee754: 1.2.1
+    dev: false
 
   /busboy@1.6.0:
     resolution: {integrity: sha512-8SFQbg/0hQ9xy3UNTB0YEnsNBbWfhf7RtnzpL7TkBiTBRfrQ9Fxcnz7VJsleJpyp6rVLvXiuORqjlHi5q+PYuA==}

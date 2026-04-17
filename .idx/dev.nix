@@ -6,7 +6,7 @@
   channel = "stable-24.05";
 
   packages = [
-    pkgs.nodejs_20
+    pkgs.nodejs_22
     pkgs.nodePackages.pnpm
     pkgs.postgresql_16
   ];
@@ -15,10 +15,10 @@
 
   idx = {
     extensions = [
-      "dbaeumer.vscode-eslint"
-      "esbenp.prettier-vscode"
-      "bradlc.vscode-tailwindcss"
-      "Prisma.prisma"
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "bradlc.vscode-tailwindcss",
+      "Prisma.prisma",
       "ms-azuretools.vscode-docker"
     ];
 
