@@ -145,6 +145,21 @@ jobs:
     environment: production
 
     steps:
+      - name: Check required secrets
+        run: |
+          if [ -z "${{ secrets.SSH_HOST }}" ]; then
+            echo "Error: SSH_HOST secret is not set. Please configure it in repository settings."
+            exit 1
+          fi
+          if [ -z "${{ secrets.SSH_USERNAME }}" ]; then
+            echo "Error: SSH_USERNAME secret is not set. Please configure it in repository settings."
+            exit 1
+          fi
+          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+            echo "Error: SSH_PRIVATE_KEY secret is not set. Please configure it in repository settings."
+            exit 1
+          fi
+
       - name: Download API package
         uses: actions/download-artifact@v4
         with:
