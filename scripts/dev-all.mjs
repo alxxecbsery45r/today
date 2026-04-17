@@ -10,7 +10,9 @@ const rootDir = path.resolve(__dirname, "..");
 
 const envFilePath = path.resolve(rootDir, ".env");
 if (existsSync(envFilePath)) {
+  console.log(`[dev-all] 📄 Loading .env from: ${envFilePath}`);
   const envFile = readFileSync(envFilePath, "utf8");
+  let loadedCount = 0;
   for (const line of envFile.split(/\r?\n/)) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith("#")) continue;
@@ -20,8 +22,17 @@ if (existsSync(envFilePath)) {
     const value = trimmed.slice(eqIndex + 1);
     if (!(key in process.env)) {
       process.env[key] = value;
+      loadedCount++;
     }
   }
+  console.log(`[dev-all] ✅ Loaded ${loadedCount} environment variables`);
+  if (process.env.DATABASE_URL) {
+    console.log(`[dev-all] ✅ DATABASE_URL is set (${process.env.DATABASE_URL.substring(0, 50)}...)`);
+  } else {
+    console.error(`[dev-all] ⚠️  DATABASE_URL is not set!`);
+  }
+} else {
+  console.error(`[dev-all] ❌ .env file not found at: ${envFilePath}`);
 }
 
 const tasks = [
@@ -34,17 +45,17 @@ const tasks = [
   {
     name: "admin",
     dir: "artifacts/admin",
-    env: { PORT: "5173" },
-  },
-  {
-    name: "vendor-app",
-    dir: "artifacts/vendor-app",
-    env: { PORT: "5174" },
+    env: { PORT: "5173", API_PROXY_TARGET: "http://localhost:3000" },
   },
   {
     name: "rider-app",
     dir: "artifacts/rider-app",
-    env: { PORT: "5175" },
+    env: { PORT: "5175", API_PROXY_TARGET: "http://localhost:3000" },
+  },
+  {
+    name: "vendor-app",
+    dir: "artifacts/vendor-app",
+    env: { PORT: "5174", API_PROXY_TARGET: "http://localhost:3000" },
   },
   {
     name: "customer-app",
@@ -142,25 +153,36 @@ process.on("SIGINT", () => shutdown(0));
 process.on("SIGTERM", () => shutdown(0));
 
 async function main() {
-  for (const task of tasks) {
-    children.push(spawnTask(task));
+  // Start API server first
+  const apiTask = tasks.find((task) => task.name === "api-server");
+  if (apiTask) {
+    children.push(spawnTask(apiTask));
+    if (apiTask.healthCheck) {
+      console.log(`[dev-all] ⏳ Waiting for API server health check at ${apiTask.healthCheck} (timeout: 60s)...`);
+      const healthy = await waitForHealth(apiTask.healthCheck, 60000);
+      if (!healthy) {
+        console.error(
+          "[api-server] HEALTH CHECK FAILED: backend did not become healthy at",
+          apiTask.healthCheck,
+        );
+        console.error(
+          "Please verify that API server logs do not show DATABASE_URL/connection errors and that the backend is not exiting early."
+        );
+        console.error("If using Neon, confirm the DATABASE_URL is set and reachable.");
+        console.error("Tip: Neon database connections may take time on first connect. If this persists, check your PostgreSQL connection pooler settings.");
+        shutdown(1);
+      } else {
+        console.log(`[api-server] ✅ healthy at ${apiTask.healthCheck}`);
+      }
+    }
   }
 
-  const apiTask = tasks.find((task) => task.name === "api-server");
-  if (apiTask?.healthCheck) {
-    const healthy = await waitForHealth(apiTask.healthCheck, 20000);
-    if (!healthy) {
-      console.error(
-        "[api-server] HEALTH CHECK FAILED: backend did not become healthy at",
-        apiTask.healthCheck,
-      );
-      console.error(
-        "Please verify that API server logs do not show DATABASE_URL/connection errors and that the backend is not exiting early."
-      );
-      console.error("If using Neon, confirm the DATABASE_URL is set and reachable.");
-    } else {
-      console.log(`[api-server] healthy at ${apiTask.healthCheck}`);
-    }
+  // Start other tasks sequentially after API is healthy
+  const otherTasks = tasks.filter((task) => task.name !== "api-server");
+  for (const task of otherTasks) {
+    children.push(spawnTask(task));
+    // Wait a bit for each to start
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 }
 
