@@ -340,7 +340,7 @@ importers:
         specifier: ^3.3.5
         version: 3.9.0(react@19.2.5)
       zod:
-        specifier: '*'
+        specifier: ^4.3.6
         version: 4.3.6
     optionalDependencies:
       '@rollup/rollup-linux-x64-gnu':
@@ -513,10 +513,10 @@ importers:
         specifier: ~15.0.10
         version: 15.0.10(expo@54.0.33)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.2.5))
       react:
-        specifier: '*'
+        specifier: ^19.2.5
         version: 19.2.5
       react-dom:
-        specifier: '*'
+        specifier: ^19.2.5
         version: 19.2.5(react@19.2.5)
       react-native:
         specifier: 0.81.5
@@ -549,7 +549,7 @@ importers:
         specifier: ~5.9.2
         version: 5.9.3
       zod:
-        specifier: '*'
+        specifier: ^4.3.6
         version: 4.3.6
       zod-validation-error:
         specifier: ^3.4.0
@@ -636,7 +636,7 @@ importers:
         specifier: ^3.6.7
         version: 3.6.7
       zod:
-        specifier: '*'
+        specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@types/bcryptjs':
@@ -856,7 +856,7 @@ importers:
         specifier: '*'
         version: 8.0.8(@types/node@25.6.0)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.1)(tsx@4.21.0)(yaml@2.8.3)
       zod:
-        specifier: '*'
+        specifier: ^4.3.6
         version: 4.3.6
 
   artifacts/rider-app:
@@ -1079,7 +1079,7 @@ importers:
         specifier: ^3.3.5
         version: 3.9.0(react@19.2.5)
       zod:
-        specifier: '*'
+        specifier: ^4.3.6
         version: 4.3.6
     optionalDependencies:
       '@rollup/rollup-linux-x64-gnu':
@@ -1318,7 +1318,7 @@ importers:
         specifier: ^3.3.5
         version: 3.9.0(react@19.2.5)
       zod:
-        specifier: '*'
+        specifier: ^4.3.6
         version: 4.3.6
     optionalDependencies:
       '@rollup/rollup-linux-x64-gnu':
@@ -1346,7 +1346,7 @@ importers:
   lib/api-zod:
     dependencies:
       zod:
-        specifier: '*'
+        specifier: ^4.3.6
         version: 4.3.6
 
   lib/auth-utils:
@@ -1367,7 +1367,7 @@ importers:
   lib/db:
     dependencies:
       drizzle-orm:
-        specifier: '*'
+        specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.20.0)(pg@8.20.0)
       drizzle-zod:
         specifier: ^0.8.3
@@ -1376,7 +1376,7 @@ importers:
         specifier: ^8.20.0
         version: 8.20.0
       zod:
-        specifier: '*'
+        specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@types/node':
