@@ -11,19 +11,30 @@ export VITE_API_URL="$DYNAMIC_URL"
 export NEXT_PUBLIC_API_URL="$DYNAMIC_URL"
 
 case $1 in
-  dev|test)
-    echo "🧪 Starting AJKMart in TEST Mode..."
-    cd artifacts/api-server && npx dotenv -e ../../.env -- pnpm run dev &
+  api)
+    echo "📡 Starting API Server..."
+    cd artifacts/api-server && npx dotenv -e ../../.env -- pnpm run dev
+    ;;
+  admin)
+    echo "💻 Starting Admin Panel..."
+    cd artifacts/admin && npx dotenv -e ../../.env -- pnpm run dev
+    ;;
+  rider)
+    echo "🏍️ Starting Rider App..."
+    cd artifacts/rider-app && npx dotenv -e ../../.env -- pnpm run dev
+    ;;
+  vendor)
+    echo "🏪 Starting Vendor App..."
+    cd artifacts/vendor-app && npx dotenv -e ../../.env -- pnpm run dev
+    ;;
+  ajkmart)
+    echo "🛒 Starting Customer App..."
     cd artifacts/ajkmart && PORT=3003 npx dotenv -e ../../.env -- pnpm exec expo start --web
     ;;
-  production|live)
-    echo "🚀 Launching AJKMart PRODUCTION (PM2)..."
-    pm2 delete all 2>/dev/null
-    cd artifacts/api-server && pm2 start index.js --name ajkmart-api -- --dotenv ../../.env
-    cd artifacts/admin && pm2 start npm --name ajkmart-admin -- run start
-    echo "✅ All systems LIVE. Use 'pm2 status' to monitor."
+  test|live)
+    echo "✅ Mode set to $1. Now run your app (e.g., api, ajkmart, admin)"
     ;;
-  api) cd artifacts/api-server && npx dotenv -e ../../.env -- pnpm run dev ;;
-  customer) cd artifacts/ajkmart && PORT=3003 npx dotenv -e ../../.env -- pnpm exec expo start --web ;;
-  *) echo "Usage: test | live | api | customer" ;;
+  *)
+    echo "Usage: api | admin | rider | vendor | ajkmart"
+    ;;
 esac
