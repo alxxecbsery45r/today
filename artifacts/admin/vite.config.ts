@@ -5,11 +5,11 @@ import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 // Fixed: Environment variables ko defaults ke sath set kiya gaya hai
-const rawPort = process.env.PORT || "3000";
-const basePath = process.env.BASE_PATH || "/";
+const rawPort = process.env.PORT || "5173";
+const basePath = process.env.BASE_PATH || "/admin/";
 
 const port = Number(rawPort);
-const apiProxyTarget = process.env.API_PROXY_TARGET || "http://api-server:3000";
+const apiProxyTarget = process.env.API_PROXY_TARGET || "http://localhost:3000";
 
 // Agar port number sahi nahi hai toh default 3000 use hoga
 const finalPort = (Number.isNaN(port) || port <= 0) ? 3000 : port;

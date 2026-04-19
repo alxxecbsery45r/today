@@ -5,10 +5,10 @@ import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 // Fixed: Default values assign kar di hain taake build na ruke
-const rawPort = process.env.PORT || "3000";
+const rawPort = process.env.PORT || "5174";
 const isCapacitorBuild = process.env.VITE_CAPACITOR === "true";
-const basePath = process.env.BASE_PATH || "/";
-const apiProxyTarget = process.env.API_PROXY_TARGET || "http://api-server:3000";
+const basePath = process.env.BASE_PATH || "/vendor/";
+const apiProxyTarget = process.env.API_PROXY_TARGET || "http://localhost:3000";
 
 const port = Number(rawPort);
 const finalPort = (Number.isNaN(port) || port <= 0) ? 3000 : port;
