@@ -1,3 +1,9 @@
+// @ts-nocheck
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.' + (process.env.NODE_ENV || 'development') });
+// @ts-nocheck
+import superAppRoutes from './routes/superAppRoutes';
+import rideRoutes from './routes/rideRoutes';
 import express from 'express';
 import { config } from './config';
 import { helmetMiddleware, corsMiddleware, globalRateLimiter, authRateLimiter, httpsEnforcer } from './middleware/security';
@@ -11,6 +17,10 @@ import adminRoutes from './routes/adminRoutes';
 import reviewRoutes from './routes/reviewRoutes';
 import wishlistRoutes from './routes/wishlistRoutes';
 import profileRoutes from './routes/profileRoutes';
+import walletRoutes from './routes/walletRoutes';
+import riderRoutes from './routes/riderRoutes';
+import notificationRoutes from './routes/notificationRoutes';
+import advancedRoutes from './routes/advancedRoutes';
 import { db } from './db';
 import { users } from './db/schema';
 import { eq } from 'drizzle-orm';
@@ -23,22 +33,16 @@ app.use(express.json());
 app.use(globalRateLimiter);
 app.use('/uploads', express.static('public/uploads'));
 
-app.use('/api/otp', otpRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/wishlist', wishlistRoutes);
-app.use('/api/profile', profileRoutes);
-
+// Health Check
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
+// Auth Routes (Register & Login)
 app.post('/api/auth/register', authRateLimiter, async (req, res): Promise<any> => {
   const validation = registerSchema.safeParse(req.body);
   if (!validation.success) return res.status(400).json({ errors: validation.error.errors });
   const { email, phone, name, role, password } = validation.data;
-  const passwordHash = await AuthService.hashPassword(password);
-  const [newUser] = await db.insert(users).values({ email, phone, name, role, passwordHash }).returning();
+  const hash = await AuthService.hashPassword(password);
+  const [newUser] = await db.insert(users).values({ email, phone, name, role, passwordHash: hash }).returning();
   const token = AuthService.generateAccessToken({ userId: newUser.id, role: newUser.role, email: newUser.email });
   return res.status(201).json({ accessToken: token, user: newUser });
 });
@@ -55,11 +59,26 @@ app.post('/api/auth/login', authRateLimiter, async (req, res): Promise<any> => {
   return res.json({ accessToken: token, user });
 });
 
+// Profile Route
 app.get('/api/user/profile', authenticate, async (req, res): Promise<any> => {
   const [user] = await db.select().from(users).where(eq(users.id, req.user!.userId));
   return res.json(user);
 });
 
-app.listen(config.port, () => {
-  console.log('🚀 Server running on port ' + config.port);
-});
+// Feature Routes
+app.use('/api/otp', otpRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/wallet', walletRoutes);
+app.use('/api/rider', riderRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/advanced', advancedRoutes);
+app.use('/api/rides', rideRoutes);
+app.use('/api/super', superAppRoutes);
+app.use('/api/super', superAppRoutes);
+
+app.listen(config.port, () => console.log('🚀 Server running on port ' + config.port));

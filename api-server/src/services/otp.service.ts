@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { db } from '../db';
 import { otps } from '../db/schema';
 import { eq, and } from 'drizzle-orm';

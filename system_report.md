@@ -1,16 +1,15 @@
 # AJKMart System Deep Scan Report
-**Generated:** Sun Apr 19 13:37:33 UTC 2026
+**Generated:** Sun Apr 19 16:27:32 UTC 2026
 **Root:** /workspaces/today
 
 ## 1. Project Overview
 - Monorepo with pnpm workspaces
-- Database: Neon PostgreSQL via Drizzle ORM
-- API Server: Node.js + Express + TypeScript (port 4000)
-
-**Applications found:**
+- **Applications found:**
   - api-server
+  - scripts
+  - package.json
 
-## 2. Backend API Endpoints (detected)
+## 2. Backend API Endpoints (Detected)
 | Method | Endpoint |
 |--------|----------|
 | get | / |
@@ -22,14 +21,21 @@
 | post | / |
 | post | /categories |
 | post | /checkout |
+| post | /deposit |
+| post | /kyc/submit |
 | post | /login |
+| post | /logistics/assign |
+| post | /logistics/track |
 | post | /products |
+| post | /register |
 | post | /request |
+| post | /rides/bid |
 | post | /signup |
 | post | /verify |
+| post | /wallet/transfer |
 | put | /update |
 
-## 3. Database Schema (detected tables)
+## 3. Database Schema (Tables)
 - `account_conditions`
 - `account_deletion_requests`
 - `admin_accounts`
@@ -57,7 +63,6 @@
 - `order_items`
 - `order_status_history`
 - `orders`
-- `otps`
 - `parcel_bookings`
 - `pending_otps`
 - `pharmacy_orders`
@@ -98,7 +103,7 @@
 - `vendor_profiles`
 - `wallet_transactions`
 - `wishlist`
-./api-server/src/db/schema.ts:import { pgTable, uuid, varchar, text, timestamp, jsonb, inet } from 'drizzle-orm/pg-core';
+./api-server/src/db/schema.ts:import { pgTable, uuid, varchar, text, timestamp, jsonb, integer, decimal } from 'drizzle-orm/pg-core';
 ./artifacts/api-server/src/routes/orders.ts:import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
 ./artifacts/api-server/src/routes/wallet.ts:import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
 ./lib/db/src/schema/account_conditions.ts:import { boolean, index, integer, jsonb, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
@@ -169,10 +174,8 @@
 
 ## 4. Security & Risks
 - **.env files found:** 7
-- **CORS:** ⚠️ Needs verification
-- **Authentication:** JWT/OTP logic check required
+- **CORS:** Manual check required
 
-## 5. Missing Critical Features
-- ❌ Real-time ride tracking (Socket.io)
-- ❌ Payment gateway integration
-- ❌ Push notifications
+## 5. Recommendations
+1. Run `pnpm audit` to check for vulnerabilities.
+2. Ensure all API routes have JWT middleware.

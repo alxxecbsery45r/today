@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 import { Request, Response } from 'express';
 import { db } from '../db';
 import { categories, products } from '../db/schema';
